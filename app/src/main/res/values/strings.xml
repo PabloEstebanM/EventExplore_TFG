@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">EventExplore</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string-array name="event_tags">
+        <item>Conciertos</item>
+        <item>Exposiciones</item>
+        <item>Anime</item>
+        <item>Teatro</item>
+        <item>Festivales</item>
+        <item>Conferencias</item>
+        <item>Deportes</item>
+        <item>Talleres</item>
+        <item>Cine</item>
+        <item>Literatura</item>
+    </string-array>
+</resources>

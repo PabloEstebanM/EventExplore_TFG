@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        tools:targetApi="31" >
+        <activity
+            android:name=".activitys.Login"
+            android:exported="true"
+            android:label="Login"
+            android:theme="@style/AppTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".activitys.Register"
+            android:exported="true"
+            android:label="Register"
+            android:theme="@style/AppTheme">
+        </activity>
+        <activity android:name=".activitys.AdminView"
+            android:exported="true"
+            android:label="AdminView"
+            android:theme="@style/AppTheme">
+        </activity>
+        <activity android:name=".activitys.CompanyView"
+            android:exported="true"
+            android:label="CompanyView"
+            android:theme="@style/AppTheme">
+        </activity>
+        <activity android:name=".activitys.ClientView"
+            android:exported="true"
+            android:label="ClientView"
+            android:theme="@style/AppTheme">
+        </activity>
+        <activity android:name=".activitys.NewEvent"
+            android:exported="true"
+            android:label="Event"
+            android:theme="@style/AppTheme">
+        </activity>
+    </application>
+</manifest>
