@@ -76,7 +76,6 @@ public class EventsAdapter_Client extends RecyclerView.Adapter<EventsAdapter_Cli
                 listener.onEventClick(event);
             });
             eventTitle.setText(event.getName());
-            // TODO: 01/06/2024 mirar como hacer la fecha pero por ahora va a webo
             date.setText(event.getStartDate() + event.getEndDate());
             place.setText(event.getPlace());
             description.setText(event.getDescription_short());

@@ -1,10 +1,14 @@
 package com.example.eventexplore_tfg.activitys;
 
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.Menu;
 import android.view.View;
 
 import androidx.annotation.Nullable;
@@ -21,7 +25,10 @@ import com.example.eventexplore_tfg.adapters.UserAdapter;
 import com.example.eventexplore_tfg.adapters.ViewPagerAdapter_Company;
 import com.example.eventexplore_tfg.database.DbManager;
 import com.example.eventexplore_tfg.fragments.FragmentListaUsuarios;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.search.SearchBar;
+import com.google.android.material.search.SearchView;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -33,12 +40,14 @@ public class AdminView extends AppCompatActivity {
     private TabLayout tabLayout;
     private ViewPager2 viewPager;
     private List<User> clients, companies, users;
-    private List<Event> events;
+    private List<Event> events, filtereEvents;
     private User userLogged;
     private DbManager manager;
     private UserAdapter clientsAdapter, companiesAdapter;
     private EventsAdapter_Admin eventsAdapter;
     private FloatingActionButton btnNew;
+    private SearchBar searchBar;
+    private SearchView searchView;
 
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,17 +60,20 @@ public class AdminView extends AppCompatActivity {
         viewPager = findViewById(R.id.view_pager_empresa);
         btnNew = findViewById(R.id.fab_new_admin);
         recycler = findViewById(R.id.Recycler_Admin);
+        searchView = findViewById(R.id.searchview_admin);
+        filtereEvents = new ArrayList<>();
         users = getUsers();
         events = getEvents();
+        filtereEvents.addAll(events);
 
         separateUsers();
         manageTabs();
         clientsAdapter = new UserAdapter(clients, this);
         companiesAdapter = new UserAdapter(companies, this);
-        eventsAdapter = new EventsAdapter_Admin(events,this);
+        eventsAdapter = new EventsAdapter_Admin(filtereEvents, this);
         recycler.setLayoutManager(new LinearLayoutManager(this));
         recycler.setAdapter(clientsAdapter);
-        
+
         eventsAdapter.setOnEventClickListener(event -> {
             Intent i = new Intent(this, NewEvent.class);
             i.putExtra("usuario", userLogged);
@@ -93,6 +105,69 @@ public class AdminView extends AppCompatActivity {
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
+            }
+        });
+
+        btnNew.setOnClickListener(v -> {
+            Intent i = new Intent(this, Register.class);
+            i.putExtra("usuario", userLogged);
+            startActivity(i);
+        });
+
+        clientsAdapter.setOnUserClickListener(user -> {
+            Intent i = new Intent(this, Register.class);
+            i.putExtra("usuario", userLogged);
+            i.putExtra("edit", user);
+            startActivity(i);
+        });
+
+        companiesAdapter.setOnUserClickListener(user -> {
+            Intent i = new Intent(this, Register.class);
+            i.putExtra("usuario", userLogged);
+            i.putExtra("edit", user);
+            startActivity(i);
+        });
+
+        searchBar = findViewById(R.id.search_bar_admin);
+
+        Menu menu = searchBar.getMenu();
+
+        menu.findItem(R.id.cerrar_sesion_meu_item).setOnMenuItemClickListener(item -> {
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("Cerrar Sesión")
+                    .setMessage("Confirmar cerrar sesión")
+                    .setPositiveButton("Cerrar sesión", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            finish();
+                            dialogInterface.dismiss();
+                        }
+                    })
+                    .setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+
+                            dialogInterface.dismiss();
+                        }
+                    })
+
+                    .show();
+            return true;
+        });
+        searchView.getEditText().addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filterData(searchView.getEditText().getText().toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
             }
         });
     }
@@ -185,11 +260,54 @@ public class AdminView extends AppCompatActivity {
         clients.remove(user);
         companies.remove(user);
         SQLiteDatabase db = manager.getWritableDatabase();
-        String deleteUser = "DELETE FROM User WHERE id = ?";
-        db.execSQL(deleteUser,new Object[]{user.getId()});
+        String deleteUser = "DELETE FROM Users WHERE id_user = ?";
+        db.execSQL(deleteUser, new Object[]{user.getId()});
     }
 
     public void deleteEvent(int position, Event event) {
-        System.out.println("moke deja de gastar dinero");
+        // TODO: 09/06/2024 dialog de confirmación
+        events.remove(event);
+        SQLiteDatabase db = manager.getWritableDatabase();
+        String deleteUser = "DELETE FROM Events WHERE id = ?";
+        // db.execSQL(deleteUser,new Object[]{event.getId()});
+    }
+
+    private void filterData(String query) {
+        clients.clear();
+        companies.clear();
+        filtereEvents.clear();
+        if (!query.isEmpty()) {
+            if (tabLayout.getSelectedTabPosition() == 0) {
+                for (User user : users) {
+                    if (user.getRole().equals("1") && user.getUsername().toLowerCase().contains(query.toLowerCase())) {
+                        clients.add(user);
+                    }
+                }
+
+            } else if (tabLayout.getSelectedTabPosition() == 1) {
+                for (User user : users) {
+                    if (user.getRole().equals("2") && user.getUsername().toLowerCase().contains(query.toLowerCase())) {
+                        companies.add(user);
+                    }
+                }
+            } else if (tabLayout.getSelectedTabPosition() == 2) {
+                for (Event event : events) {
+                    if (event.getName().toLowerCase().contains(query.toLowerCase()) ||
+                            event.getDescription_short().toLowerCase().contains(query.toLowerCase()) ||
+                            event.getPlace().toLowerCase().contains(query.toLowerCase()) ||
+                            event.getStartDate().toLowerCase().contains(query.toLowerCase()) ||
+                            event.getEndDate().toLowerCase().contains(query.toLowerCase())) {
+                        filtereEvents.add(event);
+                    }
+                }
+            }
+        }else {
+            separateUsers();
+            filtereEvents.addAll(events);
+        }
+
+        eventsAdapter.notifyDataSetChanged();
+        clientsAdapter.notifyDataSetChanged();
+        companiesAdapter.notifyDataSetChanged();
     }
 }

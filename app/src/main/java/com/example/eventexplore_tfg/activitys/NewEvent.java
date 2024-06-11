@@ -48,7 +48,6 @@ public class NewEvent extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.new_event);
-
         manager = new DbManager(this);
 
         eventName = findViewById(R.id.InputEventNameNewEvent);

@@ -46,7 +46,8 @@
 
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:inputType="textEmailAddress"/>
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -56,8 +57,8 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="20dp"
         android:layout_marginEnd="8dp"
-        app:endIconMode="password_toggle"
         android:hint="Contraseña"
+        app:endIconMode="password_toggle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/InputEmailRegister">
@@ -65,7 +66,7 @@
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textPassword"/>
+            android:inputType="textPassword" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -75,8 +76,8 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="20dp"
         android:layout_marginEnd="8dp"
-        app:endIconMode="password_toggle"
         android:hint="Confirmar contraseña"
+        app:endIconMode="password_toggle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/InputPasswordRegister">
@@ -84,9 +85,30 @@
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textPassword"/>
+            android:inputType="textPassword" />
     </com.google.android.material.textfield.TextInputLayout>
 
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/InputRole_Register"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="8dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@+id/InputConfirmPasswordRegister">
+
+        <AutoCompleteTextView
+            android:id="@+id/AutoComplete_Role"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Rol"
+            android:inputType="none"
+            android:visibility="gone"
+            app:simpleItems="@array/roles" />
+
+    </com.google.android.material.textfield.TextInputLayout>
 
     <Button
         android:id="@+id/BtnCancelarRegister"
@@ -97,7 +119,7 @@
         android:text="Cancelar"
         app:layout_constraintEnd_toStartOf="@id/BtnAceptarRegister"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/InputConfirmPasswordRegister"
+        app:layout_constraintTop_toBottomOf="@+id/InputRole_Register"
         app:layout_constraintVertical_bias="0.0" />
 
     <Button
@@ -110,5 +132,5 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.698"
         app:layout_constraintStart_toEndOf="@+id/BtnCancelarRegister"
-        app:layout_constraintTop_toBottomOf="@+id/InputConfirmPasswordRegister" />
+        app:layout_constraintTop_toBottomOf="@+id/InputRole_Register" />
 </androidx.constraintlayout.widget.ConstraintLayout>

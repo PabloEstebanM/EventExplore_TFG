@@ -1,12 +1,14 @@
-package com.example.eventexplore_tfg.activitys;
+ package com.example.eventexplore_tfg.activitys;
 
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Menu;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +21,8 @@ import com.example.eventexplore_tfg.R;
 import com.example.eventexplore_tfg.adapters.EventsAdapter_Client;
 import com.example.eventexplore_tfg.adapters.TagAdapter;
 import com.example.eventexplore_tfg.database.DbManager;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.search.SearchBar;
 import com.google.android.material.search.SearchView;
 
 import java.util.ArrayList;
@@ -33,6 +37,7 @@ public class ClientView extends AppCompatActivity implements TagAdapter.OnTagCli
     private EventsAdapter_Client eventsAdapter, eventsAdapterFiltered;
     private TagAdapter tagAdapter;
     private SearchView searchView;
+    private SearchBar searchBar;
 
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,6 +61,7 @@ public class ClientView extends AppCompatActivity implements TagAdapter.OnTagCli
         eventsRecycler.setAdapter(eventsAdapter);
 
         searchView = findViewById(R.id.searchview_cliente);
+        searchBar = findViewById(R.id.search_bar_client);
         searchView.getEditText().addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -71,6 +77,31 @@ public class ClientView extends AppCompatActivity implements TagAdapter.OnTagCli
             public void afterTextChanged(Editable s) {
 
             }
+        });
+
+        Menu menu = searchBar.getMenu();
+
+        menu.findItem(R.id.cerrar_sesion_meu_item).setOnMenuItemClickListener(item -> {
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("Cerrar Sesión")
+                    .setMessage("Confirmar cerrar sesión")
+                    .setPositiveButton("Cerrar sesión", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            finish();
+                            dialogInterface.dismiss();
+                        }
+                    })
+                    .setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+
+                            dialogInterface.dismiss();
+                        }
+                    })
+
+                    .show();
+            return true;
         });
     }
 

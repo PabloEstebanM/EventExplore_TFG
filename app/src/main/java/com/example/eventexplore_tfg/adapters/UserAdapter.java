@@ -56,9 +56,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            itemView.setOnClickListener(v -> {
-                // TODO: 06/06/2024 intent a new user
-            });
+
             image = itemView.findViewById(R.id.imagen_Usuario_Admin);
             name = itemView.findViewById(R.id.Nombre_usuario);
             email = itemView.findViewById(R.id.Email_User_gest_user);
@@ -66,6 +64,9 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         }
 
         public void bindData(final User user) {
+            itemView.setOnClickListener(v -> {
+                listener.onUserClick(user);
+            });
             name.setText(user.getUsername());
             email.setText(user.getEmail());
             // TODO: 06/06/2024 imagen
@@ -74,10 +75,10 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     private OnUserClickListener listener;
 
     public interface OnUserClickListener {
-        void onEventClick(User user);
+        void onUserClick(User user);
     }
 
-    public void setOnEventClickListener(OnUserClickListener listener) {
+    public void setOnUserClickListener(OnUserClickListener listener) {
         this.listener = listener;
     }
 }

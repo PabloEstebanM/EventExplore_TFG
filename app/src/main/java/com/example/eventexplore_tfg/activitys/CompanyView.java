@@ -3,11 +3,15 @@ package com.example.eventexplore_tfg.activitys;
 import static java.lang.Long.parseLong;
 
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.Menu;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,11 +22,15 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.example.eventexplore_tfg.Data.Event;
 import com.example.eventexplore_tfg.Data.User;
 import com.example.eventexplore_tfg.R;
+import com.example.eventexplore_tfg.adapters.EventsAdapter_Client;
 import com.example.eventexplore_tfg.adapters.EventsAdapter_Company;
 import com.example.eventexplore_tfg.adapters.ViewPagerAdapter_Company;
 import com.example.eventexplore_tfg.database.DbManager;
 import com.example.eventexplore_tfg.fragments.FragmentListaEventos;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.search.SearchBar;
+import com.google.android.material.search.SearchView;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -41,6 +49,8 @@ public class CompanyView extends AppCompatActivity {
     private EventsAdapter_Company adapterNext, adapterEnded;
     private RecyclerView recycler;
     private FloatingActionButton newEventBtn;
+    private SearchBar searchBar;
+    private SearchView searchView;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -59,6 +69,8 @@ public class CompanyView extends AppCompatActivity {
         recycler = findViewById(R.id.recycler_Company);
         recycler.setLayoutManager(new LinearLayoutManager(this));
         newEventBtn = findViewById(R.id.fab_new_evento);
+        searchBar = findViewById(R.id.search_bar_Company);
+        searchView = findViewById(R.id.searchview_empresa);
         separateEvents();
         manageTabs();
 
@@ -87,17 +99,12 @@ public class CompanyView extends AppCompatActivity {
             public void onTabReselected(TabLayout.Tab tab) {
             }
         });
-
-
         if (adapterEnded == null) {
             adapterEnded = new EventsAdapter_Company(endedEvents, CompanyView.this);
         }
-
-
         if (adapterNext == null) {
             adapterNext = new EventsAdapter_Company(nextEvents, CompanyView.this);
         }
-
         tabLayout.selectTab(tabLayout.getTabAt(0));
         newEventBtn.setOnClickListener(v -> {
             Intent i = new Intent(this, NewEvent.class);
@@ -116,7 +123,45 @@ public class CompanyView extends AppCompatActivity {
             i.putExtra("evento", event);
             startActivity(i);
         });
+        Menu menu = searchBar.getMenu();
+        menu.findItem(R.id.cerrar_sesion_meu_item).setOnMenuItemClickListener(item -> {
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("Cerrar Sesión")
+                    .setMessage("Confirmar cerrar sesión")
+                    .setPositiveButton("Cerrar sesión", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            finish();
+                            dialogInterface.dismiss();
+                        }
+                    })
+                    .setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
 
+                            dialogInterface.dismiss();
+                        }
+                    })
+
+                    .show();
+            return true;
+        });
+        searchView.getEditText().addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filterEvents(searchView.getEditText().getText().toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
     }
 
     public void onClickDelete(int position, Event event) {
@@ -135,20 +180,16 @@ public class CompanyView extends AppCompatActivity {
     private void manageTabs() {
         ViewPager2 viewPager = findViewById(R.id.view_pager_empresa);
         ViewPagerAdapter_Company adapter = new ViewPagerAdapter_Company(this);
-        if (nextEvents != null && !nextEvents.isEmpty()) {
-            adapter.addFragment(FragmentListaEventos.newInstance(nextEvents), "Próximos eventos");
-            if (adapterNext == null) {
-                adapterNext = new EventsAdapter_Company(nextEvents, this);
-            }
-            recycler.setAdapter(adapterNext);
+        adapter.addFragment(FragmentListaEventos.newInstance(nextEvents), "Próximos eventos");
+        if (adapterNext == null) {
+            adapterNext = new EventsAdapter_Company(nextEvents, this);
         }
-        if (endedEvents != null && !endedEvents.isEmpty()) {
-            adapter.addFragment(FragmentListaEventos.newInstance(endedEvents), "Eventos terminados");
-            if (adapterEnded == null) {
-                adapterEnded = new EventsAdapter_Company(endedEvents, this);
-            }
-            recycler.setAdapter(adapterEnded);
+        recycler.setAdapter(adapterNext);
+        adapter.addFragment(FragmentListaEventos.newInstance(endedEvents), "Eventos terminados");
+        if (adapterEnded == null) {
+            adapterEnded = new EventsAdapter_Company(endedEvents, this);
         }
+        recycler.setAdapter(adapterEnded);
         if (adapterNext != null) recycler.setAdapter(adapterNext);
         tabLayout.selectTab(tabLayout.getTabAt(0));
         viewPager.setAdapter(adapter);
@@ -216,4 +257,49 @@ public class CompanyView extends AppCompatActivity {
             }
         }
     }
+
+    private void filterEvents(String query) {
+        endedEvents.clear();
+        nextEvents.clear();
+        String lowerCaseQuery = query.toLowerCase();
+        if (!query.isEmpty()) {
+            for (Event event : totalEvents) {
+                boolean matchesQuery = event.getName().toLowerCase().contains(lowerCaseQuery) ||
+                        event.getDescription_short().toLowerCase().contains(lowerCaseQuery) ||
+                        event.getPlace().toLowerCase().contains(lowerCaseQuery) ||
+                        event.getStartDate().contains(lowerCaseQuery) ||
+                        event.getEndDate().contains(lowerCaseQuery);
+
+                if (matchesQuery) {
+                    if (tabLayout.getSelectedTabPosition() == 0 && !isEventEnded(event)) {
+                        nextEvents.add(event);
+                    } else if (tabLayout.getSelectedTabPosition() == 1 && isEventEnded(event)) {
+                        endedEvents.add(event);
+                    }
+                }
+            }
+        } else {
+            separateEvents();
+        }
+
+        updateRecyclerView();
+    }
+
+    private boolean isEventEnded(Event event) {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        try {
+            Date endDate = sdf.parse(event.getEndDate());
+            return new Date().after(endDate);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private void updateRecyclerView() {
+        adapterNext.notifyDataSetChanged();
+        adapterEnded.notifyDataSetChanged();
+    }
+
 }

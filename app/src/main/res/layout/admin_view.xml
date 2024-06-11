@@ -17,19 +17,19 @@
             android:layout_height="wrap_content">
 
             <com.google.android.material.search.SearchBar
-                android:id="@+id/search_bar"
+                android:id="@+id/search_bar_admin"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Buscar Evento"
+                android:hint="Buscar"
                 app:menu="@menu/profile" />
         </com.google.android.material.appbar.AppBarLayout>
 
         <com.google.android.material.search.SearchView
-            android:id="@+id/searchview_cliente"
+            android:id="@+id/searchview_admin"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:hint="Buscar evento"
-            app:layout_anchor="@id/search_bar">
+            android:hint="Buscar"
+            app:layout_anchor="@id/search_bar_admin">
 
         </com.google.android.material.search.SearchView>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

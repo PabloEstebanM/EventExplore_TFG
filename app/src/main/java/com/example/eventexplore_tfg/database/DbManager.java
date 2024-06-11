@@ -100,10 +100,10 @@ public class DbManager extends SQLiteOpenHelper {
     }
 
     private void createLogsTable(SQLiteDatabase db) {
-        String createLogsTable = "CREATE TABLE IF NOT EXISTS Logs (" +
+        String createLogsTable =  "CREATE TABLE IF NOT EXISTS Logs (" +
                 "n_log INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "id_user INTEGER NOT NULL REFERENCES Users(id_user) ON DELETE CASCADE, " +
-                "id_event INTEGER REFERENCES Events(id) ON DELETE CASCADE, " +
+                "id_user INTEGER NOT NULL REFERENCES Users(id_user), " +
+                "id_event INTEGER REFERENCES Events(id), " +
                 "date TEXT NOT NULL, " +
                 "hour TEXT NOT NULL, " +
                 "description TEXT NOT NULL" +
