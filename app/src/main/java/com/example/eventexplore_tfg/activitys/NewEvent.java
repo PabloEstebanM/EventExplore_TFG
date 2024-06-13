@@ -26,11 +26,16 @@ import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.DateValidatorPointForward;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
-
+/**
+ * This activity handles the creation and modification of events.
+ * @Author Pablo Esteban Martín
+ * @Version 1.0
+ */
 public class NewEvent extends AppCompatActivity {
     private User userLogged;
     private boolean addMode;
@@ -45,11 +50,18 @@ public class NewEvent extends AppCompatActivity {
     private boolean[] categoriesSelected;
     private long startDateSelected, endDateSelected;
 
+    /**
+     * Called when the activity is first created.
+     *
+     * @param savedInstanceState If the activity is being re-initialized after previously being shut down, this Bundle contains the data it most recently supplied in onSaveInstanceState(Bundle).
+     */
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.new_event);
+        // Initialize the database manager
         manager = new DbManager(this);
 
+        // Initialize the UI components
         eventName = findViewById(R.id.InputEventNameNewEvent);
         place = findViewById(R.id.InputEventUbiNewEvent);
         descriptionLong = findViewById(R.id.InputEventDescriptionLongNewEvent);
@@ -64,38 +76,50 @@ public class NewEvent extends AppCompatActivity {
         endDate = findViewById(R.id.InputEventEndDate);
         carousel = findViewById(R.id.carousel_NewEvent);
         favToggleButton = findViewById(R.id.favToggleButton);
-
-        // TODO: 03/06/2024 que recoja las categorías de la base de datos
         totalCategories = getResources().getStringArray(R.array.event_tags);
         categoriesSelected = new boolean[totalCategories.length];
 
+        // Check if we are adding or editing an event
         addMode = true;
         Intent intent = getIntent();
         userLogged = (User) intent.getSerializableExtra("usuario");
         try {
             event = (Event) intent.getSerializableExtra("evento");
         } catch (Exception e) {
+            // Handle the exception if any
         }
 
+        // If editing an event, bind event data to the UI
         if (event != null) {
             if (userLogged.getRole().equalsIgnoreCase("client")) disableAll();
             addMode = false;
             bindEventData();
         }
-
+        // Add listeners to UI components
         addListeners();
     }
 
+    /**
+     * Adds listeners to UI components for handling user interactions.
+     */
     private void addListeners() {
         back.setOnClickListener(v -> finish());
-        buyTicket.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(event.getUrlTicket()))));
+        buyTicket.setOnClickListener(v -> {
+            SQLiteDatabase db = manager.getWritableDatabase();
+            String query = "UPDATE Events SET tickets_sold = tickets_sold + 1 WHERE id = ?";
+            SQLiteStatement statement = db.compileStatement(query);
+            statement.bindLong(1, Long.parseLong(event.getId()));
+            statement.executeUpdateDelete();
+            db.close();
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(event.getUrlTicket())));
+        });
         favToggleButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
                 favToggleButton.setBackgroundResource(R.drawable.corazon_fill);
-                // TODO: 03/06/2024 insert/update en la tabla likedEvents
+                addFavorite();
             } else {
                 favToggleButton.setBackgroundResource(R.drawable.corazon);
-                // TODO: 03/06/2024 delete en la tabla likedEvents
+               removeFavorite();
             }
         });
 
@@ -150,6 +174,9 @@ public class NewEvent extends AppCompatActivity {
         });
     }
 
+    /**
+     * Modifies an existing event in the database.
+     */
     private void modifyEvent() {
         SQLiteDatabase db = manager.getWritableDatabase();
         String updateEvent = "UPDATE Events SET name = ?, place = ?, description_short = ?, description_long = ?, price = ?, startdate = ?, enddate = ?, id_company = ?, urlTicket = ? WHERE id = ?";
@@ -163,10 +190,10 @@ public class NewEvent extends AppCompatActivity {
         statement.bindString(7, endDate.getEditText().getText().toString());
         statement.bindLong(8, Long.valueOf(userLogged.getId()));
         statement.bindString(9, url.getEditText().getText().toString());
-        statement.bindLong(10,Long.parseLong(event.getId()));
+        statement.bindLong(10, Long.parseLong(event.getId()));
         if (statement.executeInsert() != -1) {
             String deleteCategories = "DELETE FROM EventCategories WHERE id_event = ?";
-            db.execSQL(deleteCategories,new Object[]{event.getId()});
+            db.execSQL(deleteCategories, new Object[]{event.getId()});
 
             String insertCategoryEvent = "INSERT INTO EventCategories (id_event, id_category) VALUES (?, ?);";
             SQLiteStatement statement2 = db.compileStatement(insertCategoryEvent);
@@ -188,6 +215,9 @@ public class NewEvent extends AppCompatActivity {
         }
     }
 
+    /**
+     * Inserts a new event into the database.
+     */
     private void insertNewEvent() {
         SQLiteDatabase db = manager.getWritableDatabase();
         String insertEvent = "INSERT INTO Events (name, place, description_short, description_long, price, startdate, enddate, id_company, urlTicket) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -229,9 +259,13 @@ public class NewEvent extends AppCompatActivity {
             setResult(RESULT_OK);
             finish();
         }
-        // TODO: 05/06/2024 snackbar
+        Snackbar.make(place, "Ha habido un error en la creación de evento", Snackbar.LENGTH_SHORT).show();
     }
 
+    /**
+     * Checks if all necessary data is provided.
+     * @return true if all required data is present, false otherwise.
+     */
     private boolean checkData() {
         if (eventName.getEditText().getText().toString().trim().isEmpty()) return false;
         if (place.getEditText().getText().toString().trim().isEmpty()) return false;
@@ -242,10 +276,20 @@ public class NewEvent extends AppCompatActivity {
         if (price.getEditText().getText().toString().trim().isEmpty()) return false;
         if (url.getEditText().getText().toString().trim().isEmpty()) return false;
         if (categoriesSelected.length == 0) return false;
-        // TODO: 05/06/2024 comprobar que hay alguna categoría true 
+        boolean hasTrue = false;
+        for (boolean bool : categoriesSelected) {
+            if (bool) {
+                hasTrue = true;
+                break;
+            }
+        }
+        if (!hasTrue) return false;
         return true;
     }
 
+    /**
+     * Displays a date picker for selecting event dates.
+     */
     private void showDatePicker() {
         long today = MaterialDatePicker.todayInUtcMilliseconds();
         CalendarConstraints.Builder constraintsBuilder = new CalendarConstraints.Builder();
@@ -271,6 +315,9 @@ public class NewEvent extends AppCompatActivity {
         dateRangePicker.show(getSupportFragmentManager(), "date_range_picker");
     }
 
+    /**
+     * Binds event data to the UI components.
+     */
     private void bindEventData() {
         eventName.getEditText().setText(event.getName());
         place.getEditText().setText(event.getPlace());
@@ -283,6 +330,9 @@ public class NewEvent extends AppCompatActivity {
         buyTicket.setText("Comprar entradas: " + event.getPrice() + "€");
     }
 
+    /**
+     * Disables all UI components if the user is a client.
+     */
     private void disableAll() {
         eventName.getEditText().setFocusable(false);
         place.getEditText().setFocusable(false);
@@ -300,6 +350,10 @@ public class NewEvent extends AppCompatActivity {
         favToggleButton.setChecked(checkFav());
     }
 
+    /**
+     * Checks if the event is marked as a favorite by the user.
+     * @return true if the event is a favorite, false otherwise.
+     */
     private boolean checkFav() {
         boolean isFav = false;
         SQLiteDatabase db = manager.getReadableDatabase();
@@ -314,4 +368,31 @@ public class NewEvent extends AppCompatActivity {
         db.close();
         return isFav;
     }
+
+    /**
+     * Adds the event to the user's favorites.
+     */
+    private void addFavorite() {
+        SQLiteDatabase db = manager.getWritableDatabase();
+        String insertFavorite = "INSERT INTO LikedEvents (id_user, id_event) VALUES (?, ?)";
+        SQLiteStatement statement = db.compileStatement(insertFavorite);
+        statement.bindLong(1, Long.valueOf(userLogged.getId()));
+        statement.bindLong(2, Long.valueOf(event.getId()));
+        statement.executeInsert();
+        db.close();
+    }
+
+    /**
+     * Removes the event from the user's favorites.
+     */
+    private void removeFavorite() {
+        SQLiteDatabase db = manager.getWritableDatabase();
+        String deleteFavorite = "DELETE FROM LikedEvents WHERE id_user = ? AND id_event = ?";
+        SQLiteStatement statement = db.compileStatement(deleteFavorite);
+        statement.bindLong(1, Long.valueOf(userLogged.getId()));
+        statement.bindLong(2, Long.valueOf(event.getId()));
+        statement.executeUpdateDelete();
+        db.close();
+    }
+
 }

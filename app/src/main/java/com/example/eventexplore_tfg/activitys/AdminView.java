@@ -35,6 +35,14 @@ import com.google.android.material.tabs.TabLayoutMediator;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * AdminView activity allows the admin to manage users and events.
+ * It includes functionalities such as viewing users and events,
+ * adding new users, and searching/filtering data.
+ *
+ * @version 1.0
+ * @autor Pablo Esteban Martín
+ */
 public class AdminView extends AppCompatActivity {
     private static final int REGISTER_REQUEST_CODE = 100;
     private RecyclerView recycler;
@@ -50,42 +58,63 @@ public class AdminView extends AppCompatActivity {
     private SearchBar searchBar;
     private SearchView searchView;
 
+    /**
+     * Called when the activity is first created.
+     *
+     * @param savedInstanceState If the activity is being re-initialized after previously being shut down then this Bundle contains the data it most recently supplied in onSaveInstanceState(Bundle).
+     */
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.admin_view);
+        // Initialize the database manager
         manager = new DbManager(this);
 
+        // Get the logged user from the intent
         Intent intent = getIntent();
         userLogged = (User) intent.getSerializableExtra("usuario");
+
+        // Initialize UI components
         tabLayout = findViewById(R.id.tab_layout_empresa);
         viewPager = findViewById(R.id.view_pager_empresa);
         btnNew = findViewById(R.id.fab_new_admin);
         recycler = findViewById(R.id.Recycler_Admin);
         searchView = findViewById(R.id.searchview_admin);
+        searchBar = findViewById(R.id.search_bar_admin);
         filtereEvents = new ArrayList<>();
+        // Load data from the database
         users = getUsers();
         events = getEvents();
         filtereEvents.addAll(events);
-
+        // Split users into clients and companies
         separateUsers();
+
+        // Add tabs and their adapters
         manageTabs();
+
+        //Initialize adapters
         clientsAdapter = new UserAdapter(clients, this);
         companiesAdapter = new UserAdapter(companies, this);
         eventsAdapter = new EventsAdapter_Admin(filtereEvents, this);
         recycler.setLayoutManager(new LinearLayoutManager(this));
         recycler.setAdapter(clientsAdapter);
-        searchBar = findViewById(R.id.search_bar_admin);
 
+        // add listener for the user to interact with the aplication
         addListeners();
     }
 
+    /**
+     * Adds listeners to handle various actions such as tab selection, button clicks, and search input changes.
+     */
     private void addListeners() {
+        // Event click listener to open event details
         eventsAdapter.setOnEventClickListener(event -> {
             Intent i = new Intent(this, NewEvent.class);
             i.putExtra("usuario", userLogged);
             i.putExtra("evento", event);
             startActivity(i);
         });
+
+        // Tab selection listener to switch between different tabs
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -114,19 +143,21 @@ public class AdminView extends AppCompatActivity {
             }
         });
 
+        // Button click listener to open the registration activity for new user
         btnNew.setOnClickListener(v -> {
             Intent i = new Intent(this, Register.class);
             i.putExtra("usuario", userLogged);
             startActivityForResult(i, REGISTER_REQUEST_CODE);
         });
 
+        // Clients click listener to edit user details
         clientsAdapter.setOnUserClickListener(user -> {
             Intent i = new Intent(this, Register.class);
             i.putExtra("usuario", userLogged);
             i.putExtra("edit", user);
             startActivityForResult(i, REGISTER_REQUEST_CODE);
         });
-
+        // Companies click listener to edit user details
         companiesAdapter.setOnUserClickListener(user -> {
             Intent i = new Intent(this, Register.class);
             i.putExtra("usuario", userLogged);
@@ -134,8 +165,8 @@ public class AdminView extends AppCompatActivity {
             startActivityForResult(i, REGISTER_REQUEST_CODE);
         });
 
+        // Menu item click listener for logging out
         Menu menu = searchBar.getMenu();
-
         menu.findItem(R.id.cerrar_sesion_meu_item).setOnMenuItemClickListener(item -> {
             new MaterialAlertDialogBuilder(this)
                     .setTitle("Cerrar Sesión")
@@ -157,6 +188,8 @@ public class AdminView extends AppCompatActivity {
                     .show();
             return true;
         });
+
+        // Text watcher for search input to filter data
         searchView.getEditText().addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -175,10 +208,14 @@ public class AdminView extends AppCompatActivity {
         });
     }
 
+    /**
+     * Separates users into clients and companies based on their roles.
+     */
     private void separateUsers() {
         if (users == null) users = new ArrayList<>();
         if (clients == null) clients = new ArrayList<>();
         if (companies == null) companies = new ArrayList<>();
+        // Iterate through all users and split them as clients or companies based on their role
         for (User user : users) {
             switch (user.getRole().toLowerCase()) {
                 case "1":
@@ -187,24 +224,39 @@ public class AdminView extends AppCompatActivity {
                 case "2":
                     companies.add(user);
                     break;
-                case "3":
+                default:
+                    // No action needed for other roles
                     break;
             }
         }
     }
 
+    /**
+     * Add the tabs in the ViewPager.
+     */
     private void manageTabs() {
+        // Create and set up the ViewPager adapter
         ViewPagerAdapter_Company adapter = new ViewPagerAdapter_Company(this);
         adapter.addFragment(FragmentListaUsuarios.newInstance("a", "b"), "usuarios");
         adapter.addFragment(FragmentListaUsuarios.newInstance("a", "b"), "empresas");
         adapter.addFragment(FragmentListaUsuarios.newInstance("a", "b"), "eventos");
+        // Select the first tab by default
         tabLayout.selectTab(tabLayout.getTabAt(0));
+
+        // Set the adapter to the ViewPager
         viewPager.setAdapter(adapter);
+
+        // Attach the ViewPager to the TabLayout
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
             tab.setText(adapter.getPageTitle(position));
         }).attach();
     }
 
+    /**
+     * Retrieves a list of events from the database.
+     *
+     * @return List of events.
+     */
     @SuppressLint("Range")
     private List<Event> getEvents() {
         List<Event> e = new ArrayList<>();
@@ -237,6 +289,11 @@ public class AdminView extends AppCompatActivity {
         return e;
     }
 
+    /**
+     * Retrieves a list of users from the database.
+     *
+     * @return List of users.
+     */
     @SuppressLint("Range")
     private List<User> getUsers() {
         List<User> usuarios = new ArrayList<>();
@@ -257,6 +314,12 @@ public class AdminView extends AppCompatActivity {
         return usuarios;
     }
 
+    /**
+     * Deletes a user from the database and updates the user list.
+     *
+     * @param position Position of the user in the list.
+     * @param user     The user to be deleted.
+     */
     public void deleteUser(int position, User user) {
         new MaterialAlertDialogBuilder(this)
                 .setTitle("Eliminar Usuario")
@@ -284,6 +347,12 @@ public class AdminView extends AppCompatActivity {
 
     }
 
+    /**
+     * Deletes an event from the database and updates the event list.
+     *
+     * @param position Position of the event in the list.
+     * @param event    The event to be deleted.
+     */
     public void deleteEvent(int position, Event event) {
         new MaterialAlertDialogBuilder(this)
                 .setTitle("Eliminar Evento")
@@ -309,6 +378,11 @@ public class AdminView extends AppCompatActivity {
                 .show();
     }
 
+    /**
+     * Filters data based on the provided query.
+     *
+     * @param query The search query.
+     */
     private void filterData(String query) {
         clients.clear();
         companies.clear();
@@ -345,6 +419,9 @@ public class AdminView extends AppCompatActivity {
         updateData();
     }
 
+    /**
+     * Updates the data in the adapters.
+     */
     @SuppressLint("NotifyDataSetChanged")
     private void updateData() {
         eventsAdapter.notifyDataSetChanged();
@@ -352,6 +429,13 @@ public class AdminView extends AppCompatActivity {
         companiesAdapter.notifyDataSetChanged();
     }
 
+    /**
+     * Called when an activity you launched exits, giving you the requestCode you started it with, the resultCode it returned, and any additional data from it.
+     *
+     * @param requestCode The integer request code originally supplied to startActivityForResult(), allowing you to identify who this result came from.
+     * @param resultCode The integer result code returned by the child activity through its setResult().
+     * @param data An Intent, which can return result data to the caller (various data can be attached to Intent "extras").
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -371,6 +455,9 @@ public class AdminView extends AppCompatActivity {
         }
     }
 
+    /**
+     * Called when the activity has detected the user's press of the back key.
+     */
     @SuppressLint("MissingSuperCall")
     @Override
     public void onBackPressed() {
@@ -380,7 +467,7 @@ public class AdminView extends AppCompatActivity {
                 .setPositiveButton("Cerrar sesión", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                       finish();
+                        finish();
                         dialogInterface.dismiss();
                     }
                 })

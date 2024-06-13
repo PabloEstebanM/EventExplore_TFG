@@ -1,4 +1,4 @@
- package com.example.eventexplore_tfg.activitys;
+package com.example.eventexplore_tfg.activitys;
 
 import android.annotation.SuppressLint;
 import android.content.DialogInterface;
@@ -29,6 +29,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * ClientView activity displays events to the client based on selected tags and search queries.
+ * It allows filtering events based on tags and text search, and clicking an event opens its details.
+ *
+ * @version 1.0
+ * @autor Pablo Esteban Martín
+ */
 public class ClientView extends AppCompatActivity implements TagAdapter.OnTagClickListener, EventsAdapter_Client.OnEventClickListener {
     private User userLogged;
     private List<String> tags, tagsFiltered;
@@ -39,14 +46,20 @@ public class ClientView extends AppCompatActivity implements TagAdapter.OnTagCli
     private SearchView searchView;
     private SearchBar searchBar;
 
+    /**
+     * Called when the activity is first created.
+     *
+     * @param savedInstanceState If the activity is being re-initialized after previously being shut down, this Bundle contains the data it most recently supplied in onSaveInstanceState(Bundle).
+     */
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.client_view);
 
+        // Get the logged user from the intent
         Intent intent = getIntent();
         userLogged = (User) intent.getSerializableExtra("usuario");
 
-        // TODO: 03/06/2024 que recoja las categorías de la base de datos
+        // Initialize tags and their adapter
         tags = Arrays.asList(getResources().getStringArray(R.array.event_tags));
         tagsFiltered = new ArrayList<>();
         tagsRecycler = findViewById(R.id.recyclerTags);
@@ -54,14 +67,17 @@ public class ClientView extends AppCompatActivity implements TagAdapter.OnTagCli
         tagAdapter.setOnTagClickListener(this);
         tagsRecycler.setAdapter(tagAdapter);
 
+        // Initialize tags and their adapter
         totalEvents = getevents();
+        // Initialize UI components
         eventsRecycler = findViewById(R.id.recyclerEvents_Client);
         eventsAdapter = new EventsAdapter_Client(totalEvents, eventsRecycler);
-        eventsAdapter.setOnEventClickListener(this);
-        eventsRecycler.setAdapter(eventsAdapter);
-
         searchView = findViewById(R.id.searchview_cliente);
         searchBar = findViewById(R.id.search_bar_client);
+
+        //Initialize listeners
+        eventsAdapter.setOnEventClickListener(this);
+        eventsRecycler.setAdapter(eventsAdapter);
         searchView.getEditText().addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -79,8 +95,8 @@ public class ClientView extends AppCompatActivity implements TagAdapter.OnTagCli
             }
         });
 
+        // Set up menu item click listener for logout
         Menu menu = searchBar.getMenu();
-
         menu.findItem(R.id.cerrar_sesion_meu_item).setOnMenuItemClickListener(item -> {
             new MaterialAlertDialogBuilder(this)
                     .setTitle("Cerrar Sesión")
@@ -105,18 +121,26 @@ public class ClientView extends AppCompatActivity implements TagAdapter.OnTagCli
         });
     }
 
+    /**
+     * Handles click events on tags in the RecyclerView.
+     *
+     * @param tag The tag that was clicked.
+     */
     @Override
     public void onTagClicked(String tag) {
-       tagsFiltered.clear();
-        for (String string:tags) {
+        tagsFiltered.clear();
+        for (String string : tags) {
             System.out.println(tagAdapter.selectedStates.get(string));
-            if (tagAdapter.selectedStates.get(string)){
+            if (tagAdapter.selectedStates.get(string)) {
                 tagsFiltered.add(string);
             }
         }
         filtrarEventos();
     }
 
+    /**
+     * Filters events based on selected tags and search query.
+     */
     @SuppressLint("NotifyDataSetChanged")
     private void filtrarEventos() {
         if (filteredEvents == null) {
@@ -163,14 +187,24 @@ public class ClientView extends AppCompatActivity implements TagAdapter.OnTagCli
         eventsAdapterFiltered.notifyDataSetChanged();
     }
 
+    /**
+     * Handles click events on events in the RecyclerView.
+     *
+     * @param e The event that was clicked.
+     */
     @Override
     public void onEventClick(Event e) {
         Intent intent = new Intent(this, NewEvent.class);
-        intent.putExtra("usuario",userLogged);
-        intent.putExtra("evento",e);
+        intent.putExtra("usuario", userLogged);
+        intent.putExtra("evento", e);
         startActivity(intent);
     }
 
+    /**
+     * Retrieves events from the database.
+     *
+     * @return List of events.
+     */
     private List<Event> getevents() {
         List<Event> events = new ArrayList<>();
 
@@ -229,6 +263,10 @@ public class ClientView extends AppCompatActivity implements TagAdapter.OnTagCli
         db.close();
         return events;
     }
+
+    /**
+     * Handles the back button press.
+     */
     @SuppressLint("MissingSuperCall")
     @Override
     public void onBackPressed() {

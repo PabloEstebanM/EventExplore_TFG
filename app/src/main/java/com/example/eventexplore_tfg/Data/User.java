@@ -1,13 +1,26 @@
 package com.example.eventexplore_tfg.Data;
 
 import java.io.Serializable;
-
+/**
+ * Represents a user with basic information.
+ *
+ * @version 1.0
+ * @autor Pablo Esteban Martín
+ */
 public class User implements Serializable {
     private String id;
     private String username;
     private String email;
     private String role;
 
+
+    /**
+     * Constructor for creating a User object.
+     *
+     * @param id       User ID.
+     * @param username User username.
+     * @param role     User role.
+     */
     public User(String id, String username, String role) {
         this.id = id;
         this.username = username;

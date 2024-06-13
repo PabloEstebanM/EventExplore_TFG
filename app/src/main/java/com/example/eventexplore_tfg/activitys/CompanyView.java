@@ -39,7 +39,14 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
+/**
+ * CompanyView activity displays events for a company based on their account.
+ * It provides tabs to switch between upcoming and ended events, allows event filtering,
+ * and supports event creation and deletion.
+ *
+ * @version 1.0
+ * @autor Pablo Esteban Martín
+ */
 public class CompanyView extends AppCompatActivity {
     private List<Event> totalEvents, endedEvents, nextEvents;
     private static final int NEW_EVENT_REQUEST_CODE = 42;
@@ -51,32 +58,50 @@ public class CompanyView extends AppCompatActivity {
     private FloatingActionButton newEventBtn;
     private SearchBar searchBar;
     private SearchView searchView;
-
+    /**
+     * Called when the activity is first created.
+     *
+     * @param savedInstanceState If the activity is being re-initialized after previously being shut down, this Bundle contains the data it most recently supplied in onSaveInstanceState(Bundle).
+     */
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.company_view);
-
+        // Retrieve user information passed from the previous activity
         Intent intent = getIntent();
         userLogged = (User) intent.getSerializableExtra("usuario");
 
+        // Initialize database manager
         manager = new DbManager(this);
-        totalEvents = getEvents();
 
+        // Initialize lists to store events
+        totalEvents = getEvents();
         endedEvents = new ArrayList<>();
         nextEvents = new ArrayList<>();
+
+        // Initialize UI components.
         tabLayout = findViewById(R.id.tab_layout_empresa);
         recycler = findViewById(R.id.recycler_Company);
         recycler.setLayoutManager(new LinearLayoutManager(this));
         newEventBtn = findViewById(R.id.fab_new_evento);
         searchBar = findViewById(R.id.search_bar_Company);
         searchView = findViewById(R.id.searchview_empresa);
+
+        // Separate events into upcoming and ended categories
         separateEvents();
+
+        // Manage tab selection and setup view pager
         manageTabs();
+
+        // Add listeners to UI elements
         addListeners();
     }
 
+    /**
+     * Sets up listeners for UI elements like tabs, search bar, and floating action button.
+     */
     private void addListeners() {
+        // TabLayout listener to switch between upcoming and ended events
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -102,6 +127,7 @@ public class CompanyView extends AppCompatActivity {
             public void onTabReselected(TabLayout.Tab tab) {
             }
         });
+        // Ensure adapters are initialized and select the first tab by default
         if (adapterEnded == null) {
             adapterEnded = new EventsAdapter_Company(endedEvents, CompanyView.this);
         }
@@ -109,23 +135,27 @@ public class CompanyView extends AppCompatActivity {
             adapterNext = new EventsAdapter_Company(nextEvents, CompanyView.this);
         }
         tabLayout.selectTab(tabLayout.getTabAt(0));
+        // Floating action button to create new events
         newEventBtn.setOnClickListener(v -> {
             Intent i = new Intent(this, NewEvent.class);
             i.putExtra("usuario", userLogged);
             startActivityForResult(i, NEW_EVENT_REQUEST_CODE);
         });
+        // Click listener for upcoming events adapter
         adapterNext.setOnEventClickListener(event -> {
             Intent i = new Intent(this, NewEvent.class);
             i.putExtra("usuario", userLogged);
             i.putExtra("evento", event);
             startActivity(i);
         });
+        // Click listener for ended events adapter
         adapterEnded.setOnEventClickListener(event -> {
             Intent i = new Intent(this, NewEvent.class);
             i.putExtra("usuario", userLogged);
             i.putExtra("evento", event);
             startActivity(i);
         });
+        // Menu item listener for logging out
         Menu menu = searchBar.getMenu();
         menu.findItem(R.id.cerrar_sesion_meu_item).setOnMenuItemClickListener(item -> {
             new MaterialAlertDialogBuilder(this)
@@ -149,6 +179,7 @@ public class CompanyView extends AppCompatActivity {
                     .show();
             return true;
         });
+        // Search view listener for filtering events
         searchView.getEditText().addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -166,7 +197,12 @@ public class CompanyView extends AppCompatActivity {
             }
         });
     }
-
+    /**
+     * Deletes a Event from the database and updates the list.
+     *
+     * @param position Position of the user in the list.
+     * @param event     The event to be deleted.
+     */
     public void onClickDelete(int position, Event event) {
         new MaterialAlertDialogBuilder(this)
                 .setTitle("Eliminar evento")
@@ -197,6 +233,9 @@ public class CompanyView extends AppCompatActivity {
 
     }
 
+    /**
+     * Manages tab layout and sets up the view pager.
+     */
     private void manageTabs() {
         ViewPager2 viewPager = findViewById(R.id.view_pager_empresa);
         ViewPagerAdapter_Company adapter = new ViewPagerAdapter_Company(this);
@@ -219,6 +258,9 @@ public class CompanyView extends AppCompatActivity {
 
     }
 
+    /**
+     * Separates events into upcoming and ended categories based on the current date.
+     */
     private void separateEvents() {
         Date today = new Date();
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
@@ -236,6 +278,11 @@ public class CompanyView extends AppCompatActivity {
         }
     }
 
+    /**
+     * Retrieves events for the logged-in user from the database.
+     *
+     * @return List of events.
+     */
     @SuppressLint("Range")
     private List<Event> getEvents() {
         List<Event> e = new ArrayList<>();
@@ -269,6 +316,13 @@ public class CompanyView extends AppCompatActivity {
     }
 
 
+    /**
+     * Handles the result from the NewEvent activity.
+     *
+     * @param requestCode The request code.
+     * @param resultCode The result code.
+     * @param data The intent data.
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -286,12 +340,20 @@ public class CompanyView extends AppCompatActivity {
         }
     }
 
+    /**
+     * Updates the event lists and notifies the adapters.
+     */
     @SuppressLint("NotifyDataSetChanged")
     private void updateEvents() {
         adapterEnded.notifyDataSetChanged();
         adapterNext.notifyDataSetChanged();
     }
 
+    /**
+     * Filters events based on the search query.
+     *
+     * @param query The search query.
+     */
     private void filterEvents(String query) {
         endedEvents.clear();
         nextEvents.clear();
@@ -319,6 +381,12 @@ public class CompanyView extends AppCompatActivity {
         updateRecyclerView();
     }
 
+    /**
+     * Checks if an event has ended based on the current date.
+     *
+     * @param event The event to check.
+     * @return True if the event has ended, false otherwise.
+     */
     private boolean isEventEnded(Event event) {
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         try {
@@ -330,12 +398,19 @@ public class CompanyView extends AppCompatActivity {
         }
     }
 
+    /**
+     * Updates the RecyclerView by notifying the adapters of changes.
+     */
     @SuppressLint("NotifyDataSetChanged")
     private void updateRecyclerView() {
         adapterNext.notifyDataSetChanged();
         adapterEnded.notifyDataSetChanged();
     }
 
+
+    /**
+     * Handles the back button press to show a logout confirmation dialog.
+     */
     @SuppressLint("MissingSuperCall")
     @Override
     public void onBackPressed() {

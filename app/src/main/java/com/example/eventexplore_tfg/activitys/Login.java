@@ -18,22 +18,34 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import java.security.MessageDigest;
 
+/**
+ * Login activity handles user authentication.
+ * It provides input fields for username and password, and buttons for login and registration.
+ * @version 1.0
+ * @autor Pablo Esteban Martín
+ */
 public class Login extends AppCompatActivity {
     private TextInputLayout usernameInput, passwordInput;
     private Button registerBtn, loginBtn;
     private DbManager manager;
 
+    /**
+     * Called when the activity is first created.
+     *
+     * @param savedInstanceState If the activity is being re-initialized after previously being shut down, this Bundle contains the data it most recently supplied in onSaveInstanceState(Bundle).
+     */
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
+        // Initialize UI components
         usernameInput = findViewById(R.id.InputUsernameLogin);
         passwordInput = findViewById(R.id.InputPasswordLogin);
         registerBtn = findViewById(R.id.BtnRegisterLogin);
         loginBtn = findViewById(R.id.BtnLoginLogin);
         manager = new DbManager(this);
 
-
+// Add focus change listener to username input field
         usernameInput.getEditText().setOnFocusChangeListener((v, hasFocus) -> {
             if (!hasFocus) {
                 if (!comprobarUsername()) {
@@ -43,15 +55,17 @@ public class Login extends AppCompatActivity {
                 }
             }
         });
+        // Set click listener for register button
         registerBtn.setOnClickListener(v -> {
             startActivity(new Intent(this, Register.class));
         });
-
+// Set click listener for login button
         loginBtn.setOnClickListener(v -> {
             if (comprobarLogin()) {
                 String id = "";
                 String username = "";
                 String role = "";
+                // Query to get user details
                 SQLiteDatabase db = manager.getReadableDatabase();
                 String consultaRol = "SELECT Users.id_user,Users.username, Role.name FROM Users " +
                         "JOIN Role ON Users.rol = Role.id " +
@@ -62,6 +76,7 @@ public class Login extends AppCompatActivity {
                     username = cursor.getString(1);
                     role = cursor.getString(2);
                 }
+                // Create User object and log in
                 User userLoged = new User(id, username, role);
                 logear(userLoged);
             } else {
@@ -69,7 +84,11 @@ public class Login extends AppCompatActivity {
             }
         });
     }
-
+    /**
+     * Logs in the user based on their role.
+     *
+     * @param userLoged The logged-in user.
+     */
     private void logear(User userLoged) {
         Intent intent = null;
         switch (userLoged.getRole().toLowerCase()) {
@@ -91,16 +110,24 @@ public class Login extends AppCompatActivity {
         }
     }
 
+    /**
+     * Validates login credentials.
+     *
+     * @return True if the credentials are valid, false otherwise.
+     */
     private Boolean comprobarLogin() {
         Boolean loginCorrecto = true;
+        // Validate username format
         if (!comprobarUsername()) {
             Snackbar.make(usernameInput, "El nombre de usuario contiene carácteres inválidos", Snackbar.LENGTH_SHORT).show();
         }
+        // Check if input fields are not empty
         if (usernameInput.getEditText().getText() == null || usernameInput.getEditText().getText().toString().trim().isEmpty() ||
                 passwordInput.getEditText().getText() == null || passwordInput.getEditText().getText().toString().trim().isEmpty()) {
             loginCorrecto = false;
             Snackbar.make(usernameInput, "Todos los campos deben estar rellenos", Snackbar.LENGTH_SHORT).show();
         }
+        // Validate credentials with the database
         SQLiteDatabase db = manager.getReadableDatabase();
         String hashedPass = hashPass();
         System.out.println(hashedPass);
@@ -118,6 +145,11 @@ public class Login extends AppCompatActivity {
         return loginCorrecto;
     }
 
+    /**
+     * Validates the format of the username.
+     *
+     * @return True if the username format is valid, false otherwise.
+     */
     private Boolean comprobarUsername() {
         String username = usernameInput.getEditText().getText().toString();
         for (int i = 0; i < username.length(); i++) {
@@ -129,6 +161,11 @@ public class Login extends AppCompatActivity {
         return true;  // vale
     }
 
+    /**
+     * Hashes the password using SHA-256.
+     *
+     * @return The hashed password as a hexadecimal string.
+     */
     public String hashPass() {
 
         try {
@@ -139,6 +176,13 @@ public class Login extends AppCompatActivity {
             throw new RuntimeException(e);
         }
     }
+
+    /**
+     * Converts a byte array to a hexadecimal string.
+     *
+     * @param bytes The byte array.
+     * @return The hexadecimal string.
+     */
     public String bytesToHex(byte[] bytes) {
         StringBuilder hexString = new StringBuilder(2 * bytes.length);
         for (byte b : bytes) {

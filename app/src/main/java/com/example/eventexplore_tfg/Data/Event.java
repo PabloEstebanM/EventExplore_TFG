@@ -3,6 +3,13 @@ package com.example.eventexplore_tfg.Data;
 import java.io.Serializable;
 import java.util.List;
 
+
+/**
+ * Represents an event with its details.
+ *
+ * @version 1.0
+ * @autor Pablo Esteban Martín
+ */
 public class Event implements Serializable {
     private String id;
     private String name;
@@ -20,7 +27,22 @@ public class Event implements Serializable {
 
     //private List<Uri> photos
 
-
+    /**
+     * Constructor for creating an Event object.
+     *
+     * @param id               Event ID.
+     * @param name             Event name.
+     * @param place            Event location.
+     * @param description_Long Long description of the event.
+     * @param description_short Short description of the event.
+     * @param startDate        Event start date.
+     * @param endDate          Event end date.
+     * @param price            Event price.
+     * @param ticketsSoldNumber Number of tickets sold for the event.
+     * @param companyName      Company name organizing the event.
+     * @param contactEmail     Contact email for the event.
+     * @param urlTicket        Ticket URL for the event.
+     */
     public Event(String id, String name, String place, String description_Long, String description_short, String startDate, String endDate, double price, int ticketsSoldNumber, String companyName, String contactEmail, String urlTicket) {
         this.id = id;
         this.name = name;
