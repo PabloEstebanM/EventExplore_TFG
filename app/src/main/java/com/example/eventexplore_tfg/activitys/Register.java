@@ -108,6 +108,7 @@ public class Register extends AppCompatActivity {
                     statement.bindLong(5, Long.parseLong(userEdit.getId()));
                     i = statement.executeUpdateDelete();
                     if ( i  >0){
+                        setResult(RESULT_OK);
                         finish();
                     }else {
                         Snackbar.make(image, "Ha habido un error en la modificación del usuario", Snackbar.LENGTH_SHORT).show();
@@ -115,6 +116,7 @@ public class Register extends AppCompatActivity {
                 }else{
                     i = statement.executeInsert();
                     if ( i  != -1){
+                        setResult(RESULT_OK);
                         finish();
                     }else {
                         Snackbar.make(image, "Ha habido un error en la creación del usuario", Snackbar.LENGTH_SHORT).show();

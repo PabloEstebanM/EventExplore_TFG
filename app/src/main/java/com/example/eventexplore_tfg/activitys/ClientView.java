@@ -229,5 +229,27 @@ public class ClientView extends AppCompatActivity implements TagAdapter.OnTagCli
         db.close();
         return events;
     }
+    @SuppressLint("MissingSuperCall")
+    @Override
+    public void onBackPressed() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Cerrar Sesión")
+                .setMessage("Confirmar cerrar sesión")
+                .setPositiveButton("Cerrar sesión", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        finish();
+                        dialogInterface.dismiss();
+                    }
+                })
+                .setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+
+                        dialogInterface.dismiss();
+                    }
+                })
+                .show();
+    }
 
 }

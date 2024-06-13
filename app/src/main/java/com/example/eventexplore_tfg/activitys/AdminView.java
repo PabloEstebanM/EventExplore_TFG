@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AdminView extends AppCompatActivity {
+    private static final int REGISTER_REQUEST_CODE = 100;
     private RecyclerView recycler;
     private TabLayout tabLayout;
     private ViewPager2 viewPager;
@@ -73,7 +74,12 @@ public class AdminView extends AppCompatActivity {
         eventsAdapter = new EventsAdapter_Admin(filtereEvents, this);
         recycler.setLayoutManager(new LinearLayoutManager(this));
         recycler.setAdapter(clientsAdapter);
+        searchBar = findViewById(R.id.search_bar_admin);
 
+        addListeners();
+    }
+
+    private void addListeners() {
         eventsAdapter.setOnEventClickListener(event -> {
             Intent i = new Intent(this, NewEvent.class);
             i.putExtra("usuario", userLogged);
@@ -111,24 +117,22 @@ public class AdminView extends AppCompatActivity {
         btnNew.setOnClickListener(v -> {
             Intent i = new Intent(this, Register.class);
             i.putExtra("usuario", userLogged);
-            startActivity(i);
+            startActivityForResult(i, REGISTER_REQUEST_CODE);
         });
 
         clientsAdapter.setOnUserClickListener(user -> {
             Intent i = new Intent(this, Register.class);
             i.putExtra("usuario", userLogged);
             i.putExtra("edit", user);
-            startActivity(i);
+            startActivityForResult(i, REGISTER_REQUEST_CODE);
         });
 
         companiesAdapter.setOnUserClickListener(user -> {
             Intent i = new Intent(this, Register.class);
             i.putExtra("usuario", userLogged);
             i.putExtra("edit", user);
-            startActivity(i);
+            startActivityForResult(i, REGISTER_REQUEST_CODE);
         });
-
-        searchBar = findViewById(R.id.search_bar_admin);
 
         Menu menu = searchBar.getMenu();
 
@@ -150,7 +154,6 @@ public class AdminView extends AppCompatActivity {
                             dialogInterface.dismiss();
                         }
                     })
-
                     .show();
             return true;
         });
@@ -255,21 +258,55 @@ public class AdminView extends AppCompatActivity {
     }
 
     public void deleteUser(int position, User user) {
-        // TODO: 06/06/2024 dialog de confimación
-        users.remove(user);
-        clients.remove(user);
-        companies.remove(user);
-        SQLiteDatabase db = manager.getWritableDatabase();
-        String deleteUser = "DELETE FROM Users WHERE id_user = ?";
-        db.execSQL(deleteUser, new Object[]{user.getId()});
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Eliminar Usuario")
+                .setMessage("¿Seguro que desea eliminar este usuario?")
+                .setPositiveButton("Eliminar", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        users.remove(user);
+                        clients.remove(user);
+                        companies.remove(user);
+                        SQLiteDatabase db = manager.getWritableDatabase();
+                        String deleteUser = "DELETE FROM Users WHERE id_user = ?";
+                        db.execSQL(deleteUser, new Object[]{user.getId()});
+                        updateData();
+                        dialogInterface.dismiss();
+                    }
+                })
+                .setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                })
+                .show();
+
     }
 
     public void deleteEvent(int position, Event event) {
-        // TODO: 09/06/2024 dialog de confirmación
-        events.remove(event);
-        SQLiteDatabase db = manager.getWritableDatabase();
-        String deleteUser = "DELETE FROM Events WHERE id = ?";
-        // db.execSQL(deleteUser,new Object[]{event.getId()});
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Eliminar Evento")
+                .setMessage("¿Seguro que desea eliminar este evento?")
+                .setPositiveButton("Eliminar", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        events.remove(event);
+                        filtereEvents.remove(event);
+                        SQLiteDatabase db = manager.getWritableDatabase();
+                        String deleteUser = "DELETE FROM Events WHERE id = ?";
+                        db.execSQL(deleteUser, new Object[]{event.getId()});
+                        updateData();
+                        dialogInterface.dismiss();
+                    }
+                })
+                .setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                })
+                .show();
     }
 
     private void filterData(String query) {
@@ -301,13 +338,59 @@ public class AdminView extends AppCompatActivity {
                     }
                 }
             }
-        }else {
+        } else {
             separateUsers();
             filtereEvents.addAll(events);
         }
+        updateData();
+    }
 
+    @SuppressLint("NotifyDataSetChanged")
+    private void updateData() {
         eventsAdapter.notifyDataSetChanged();
         clientsAdapter.notifyDataSetChanged();
         companiesAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REGISTER_REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
+                users.clear();
+                clients.clear();
+                companies.clear();
+                events.clear();
+                filtereEvents.clear();
+                users = getUsers();
+                events = getEvents();
+                filtereEvents.addAll(events);
+                separateUsers();
+                updateData();
+            }
+        }
+    }
+
+    @SuppressLint("MissingSuperCall")
+    @Override
+    public void onBackPressed() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Cerrar Sesión")
+                .setMessage("Confirmar cerrar sesión")
+                .setPositiveButton("Cerrar sesión", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                       finish();
+                        dialogInterface.dismiss();
+                    }
+                })
+                .setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+
+                        dialogInterface.dismiss();
+                    }
+                })
+                .show();
     }
 }

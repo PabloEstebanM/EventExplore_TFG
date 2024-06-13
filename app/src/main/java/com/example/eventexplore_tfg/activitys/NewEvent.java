@@ -284,9 +284,9 @@ public class NewEvent extends AppCompatActivity {
     }
 
     private void disableAll() {
-        eventName.getEditText().setEnabled(false);
-        place.getEditText().setEnabled(false);
-        descriptionLong.getEditText().setEnabled(false);
+        eventName.getEditText().setFocusable(false);
+        place.getEditText().setFocusable(false);
+        descriptionLong.getEditText().setFocusable(false);
         descriptionShort.setVisibility(View.GONE);
         price.setVisibility(View.GONE);
         url.setVisibility(View.GONE);

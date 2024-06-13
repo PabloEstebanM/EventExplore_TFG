@@ -73,7 +73,10 @@ public class CompanyView extends AppCompatActivity {
         searchView = findViewById(R.id.searchview_empresa);
         separateEvents();
         manageTabs();
+        addListeners();
+    }
 
+    private void addListeners() {
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -165,16 +168,33 @@ public class CompanyView extends AppCompatActivity {
     }
 
     public void onClickDelete(int position, Event event) {
-        SQLiteDatabase db = manager.getWritableDatabase();
-        String deleteQuery = "DELETE FROM Events WHERE id = ?";
-        SQLiteStatement statement = db.compileStatement(deleteQuery);
-        statement.bindLong(1, parseLong(event.getId()));
-        if (statement.executeUpdateDelete() < 1) {
-            //fino
-        } else {
-            //no fino
-        }
-        db.close();
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Eliminar evento")
+                .setMessage("¿Seguro que desea eliminar el evento?")
+                .setPositiveButton("Eliminar", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        SQLiteDatabase db = manager.getWritableDatabase();
+                        String deleteQuery = "DELETE FROM Events WHERE id = ?";
+                        SQLiteStatement statement = db.compileStatement(deleteQuery);
+                        statement.bindLong(1, parseLong(event.getId()));
+                        if (statement.executeUpdateDelete() < 1) {
+                            //fino
+                        } else {
+                            //no fino
+                        }
+                        db.close();
+                        dialogInterface.dismiss();
+                    }
+                })
+                .setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                })
+                .show();
+
     }
 
     private void manageTabs() {
@@ -248,14 +268,28 @@ public class CompanyView extends AppCompatActivity {
         return e;
     }
 
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == NEW_EVENT_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
-                // TODO: 05/06/2024 log en la base de datos y actualizar los adapters
+                totalEvents.clear();
+                endedEvents.clear();
+                nextEvents.clear();
+
+                totalEvents = getEvents();
+                separateEvents();
+                updateEvents();
+
             }
         }
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private void updateEvents() {
+        adapterEnded.notifyDataSetChanged();
+        adapterNext.notifyDataSetChanged();
     }
 
     private void filterEvents(String query) {
@@ -302,4 +336,26 @@ public class CompanyView extends AppCompatActivity {
         adapterEnded.notifyDataSetChanged();
     }
 
+    @SuppressLint("MissingSuperCall")
+    @Override
+    public void onBackPressed() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Cerrar Sesión")
+                .setMessage("Confirmar cerrar sesión")
+                .setPositiveButton("Cerrar sesión", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        finish();
+                        dialogInterface.dismiss();
+                    }
+                })
+                .setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+
+                        dialogInterface.dismiss();
+                    }
+                })
+                .show();
+    }
 }

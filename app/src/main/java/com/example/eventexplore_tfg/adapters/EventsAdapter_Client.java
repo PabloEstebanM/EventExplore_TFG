@@ -76,7 +76,7 @@ public class EventsAdapter_Client extends RecyclerView.Adapter<EventsAdapter_Cli
                 listener.onEventClick(event);
             });
             eventTitle.setText(event.getName());
-            date.setText(event.getStartDate() + event.getEndDate());
+            date.setText(event.getStartDate() +" - " + event.getEndDate());
             place.setText(event.getPlace());
             description.setText(event.getDescription_short());
             buyButton.setText(event.getPrice() + "€");
